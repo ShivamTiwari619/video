@@ -166,3 +166,8 @@ Length 29.98s. Scene changes are fast slide-ups (0.4s) with the outgoing page mo
 Files (in `2_usp_film/`): `plan_sizzle.py` (cuts VO + writes `sizzle/timing.js`), `sizzle/index.html`, `audio/build_sizzle_audio.py`, `rend_sizzle.py`, output `MarketWolf_Sizzle_v1.mp4`.
 Rebuild: `python3 plan_sizzle.py && python3 audio/build_sizzle_audio.py && ffmpeg -i sizzle_mix_raw.wav -af loudnorm=I=-15:TP=-1.5 sizzle/sizzle_mix.wav`, render `python3 rend_sizzle.py 0 2699` (set `CHROME` to a Chromium binary if Playwright's own isn't installed), then `ffmpeg -framerate 90 -i sizzle_frames/%05d.jpg -i sizzle/sizzle_mix.wav -vf "tmix=frames=3,framestep=3" -r 30 ...`.
 New VO: record the 7 lines as separate files, write them into `vo/` + `vo/vo.json` (word timings), point `SEG` in `plan_sizzle.py` at them, re-run. Every cue re-syncs.
+
+### Sizzle v2 (final VO) · `MarketWolf_Sizzle_v2.mp4`, 28.53s
+- VO: Shivam's single Higgsfield take (`2_usp_film/vo_new/take.mp3`, 25.9s, main script). No ElevenLabs/Whisper access in the sandbox, so word timings come from a pocketsphinx forced alignment against the known script (`vo_new/align.json` → `vo_new/vo.json`). All 72 tokens matched; pauses agree with ffmpeg silencedetect.
+- Cut at the quietest 10 ms in each sentence pause, no re-reading or re-ordering; the take's own levels kept.
+- Rebuild: `VO_DIR=vo_new python3 plan_sizzle.py`, then audio, render and mux as above (two-pass loudnorm).

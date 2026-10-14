@@ -1,19 +1,22 @@
 # Sizzle cut (25-30s). Builds the VO edit from the approved Viraj takes in vo/,
 # cutting at the quietest 10 ms inside each sentence gap, then writes
 # sizzle/vo/*.wav, sizzle/timeline.json and sizzle/timing.js.
-# Run from 2_usp_film/:  python3 plan_sizzle.py
+# Run from 2_usp_film/:  python3 plan_sizzle.py          (temp cut from the Viraj takes in vo/)
+#                        VO_DIR=vo_new python3 plan_sizzle.py   (the single Higgsfield take in vo_new/)
 import json, re, os, numpy as np
 from scipy.io import wavfile
-V = json.load(open('vo/vo.json')); SR = 44100; FADE = .012
+VO_DIR = os.environ.get('VO_DIR', 'vo')
+V = json.load(open(f'{VO_DIR}/vo.json')); SR = 44100; FADE = .012
 os.makedirs('sizzle/vo', exist_ok=True)
 
 def wav(k):
-    sr, x = wavfile.read(f'vo/{k}.wav'); assert sr == SR
+    sr, x = wavfile.read(f'{VO_DIR}/{k}.wav'); assert sr == SR
     return x.astype(np.float64) / 32768
-def word(k, prefix, n=1):
+def word(k, prefix, n=1, exact=False):
     c = 0
     for i, (w, a, b) in enumerate(V[k]['words']):
-        if re.sub(r'[^a-z0-9]', '', w.lower()).startswith(prefix):
+        nw = re.sub(r'[^a-z0-9]', '', w.lower())
+        if (nw == prefix) if exact else nw.startswith(prefix):
             c += 1
             if c == n: return i
     raise KeyError((k, prefix, n))
@@ -27,15 +30,28 @@ def gap(k, i):
     W = V[k]['words']; return quiet(wav(k), W[i - 1][1] + .5 * (W[i - 1][2] - W[i - 1][1]), W[i][1] + .03)
 
 # segment = (name, source take, first word index, first word index after the segment or None)
-SEG = [
-    ('hook',   'l1', 0, None),                       # Every trader knows when to get in. Very few know when to get out.
-    ('xf',     'l3', 0, word('l3', 'a')),            # On MarketWolf, every trade has its exit set before you enter.
-    ('exit',   'l3', word('l3', 'a'), None),         # A target to book your profit, and a stop loss to protect your capital.
-    ('ideas',  'l4', word('l4', 'trade'), word('l4', 'each')),  # trade ideas from SEBI-registered analysts
-    ('app',    'l5', 0, word('l5', 'even')),         # Indices, stocks and commodities, all in one app.
-    ('price',  'l6', 0, None),                       # A flat nineteen rupees a trade. Zero AMC. Nothing hidden.
-    ('end',    'l8', 0, None),                       # MarketWolf. Trade with discipline.
-]
+if VO_DIR == 'vo':
+    SEG = [
+        ('hook',   'l1', 0, None),                       # Every trader knows when to get in. Very few know when to get out.
+        ('xf',     'l3', 0, word('l3', 'a')),            # On MarketWolf, every trade has its exit set before you enter.
+        ('exit',   'l3', word('l3', 'a'), None),         # A target to book your profit, and a stop loss to protect your capital.
+        ('ideas',  'l4', word('l4', 'trade'), word('l4', 'each')),  # trade ideas from SEBI-registered analysts
+        ('app',    'l5', 0, word('l5', 'even')),         # Indices, stocks and commodities, all in one app.
+        ('price',  'l6', 0, None),                       # A flat nineteen rupees a trade. Zero AMC. Nothing hidden.
+        ('end',    'l8', 0, None),                       # MarketWolf. Trade with discipline.
+    ]
+else:   # one take holding all seven lines, cut at the sentence pauses
+    T_ = 'take'
+    X = lambda w_, n=1: word(T_, w_, n, exact=True)
+    SEG = [
+        ('hook',  T_, 0, X('on')),
+        ('xf',    T_, X('on'), X('a')),
+        ('exit',  T_, X('a'), X('trade', 2)),
+        ('ideas', T_, X('trade', 2), X('indices')),
+        ('app',   T_, X('indices'), X('a', 3)),
+        ('price', T_, X('a', 3), X('marketwolf', 2)),
+        ('end',   T_, X('marketwolf', 2), None),
+    ]
 PRE = {'hook': .25}                    # silence before the line inside its scene
 GAP_AFTER = {'hook': .25, 'exit': .45, 'end': 1.05}   # breath after the line before the next scene starts
 DEF_GAP = .18
