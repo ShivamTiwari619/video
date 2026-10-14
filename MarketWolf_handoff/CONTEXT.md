@@ -144,3 +144,25 @@ Final MP4s delivered so far (re-upload if needed): `MarketWolf_Reel_v15_DraftA_C
 - Ask MarketWolf for real Trade Ideas, order ticket and market screens (unmasked) to replace the rebuilt components.
 - Client to confirm "₹19 per trade", "100+ calls a month", and which download figure (if any) can be used.
 - Optional: deep-house variant of the music bed for the premium audience, kept at the same low level under VO.
+
+---
+
+## 10. Sizzle cut (v1, 14 Oct 2026) · replaces the 58s USP film
+
+Brief: 25–30s, faster, a big hook at the top: a single line on what makes MarketWolf different.
+
+| # | Beat | Line (temp VO, cut from approved Viraj takes) | Look |
+|---|---|---|---|
+| 1 | Hook | Every trader knows when to get in. Very few know when to get out. | dark, word-synced type, the exit line draws |
+| 2 | **X-factor** | On MarketWolf, every trade has its exit set before you enter. | full lime, 4-line headline, "exit set" flips to an ink block |
+| 3 | Exit, preset | A target to book your profit, and a stop loss to protect your capital. | target/SL chart + Target & SL panel, exits at target |
+| 4 | Trade ideas | trade ideas from SEBI-registered analysts, | 3 idea cards cascade |
+| 5 | One app | Indices, stocks and commodities, all in one app. | tabs switch on each word |
+| 6 | Pricing | A flat nineteen rupees a trade. Zero AMC. Nothing hidden. | full purple, ₹19 / ₹0 numerals |
+| 7 | End | MarketWolf. Trade with discipline. | logo, CTA, SEBI disclaimer |
+
+Length 29.98s. Scene changes are fast slide-ups (0.4s) with the outgoing page moving up behind the new one. The bed uses the same lounge palette with 1.6s bars and soft pulse, ducked under the VO. Master is −15 LUFS.
+
+Files (in `2_usp_film/`): `plan_sizzle.py` (cuts VO + writes `sizzle/timing.js`), `sizzle/index.html`, `audio/build_sizzle_audio.py`, `rend_sizzle.py`, output `MarketWolf_Sizzle_v1.mp4`.
+Rebuild: `python3 plan_sizzle.py && python3 audio/build_sizzle_audio.py && ffmpeg -i sizzle_mix_raw.wav -af loudnorm=I=-15:TP=-1.5 sizzle/sizzle_mix.wav`, render `python3 rend_sizzle.py 0 2699` (set `CHROME` to a Chromium binary if Playwright's own isn't installed), then `ffmpeg -framerate 90 -i sizzle_frames/%05d.jpg -i sizzle/sizzle_mix.wav -vf "tmix=frames=3,framestep=3" -r 30 ...`.
+New VO: record the 7 lines as separate files, write them into `vo/` + `vo/vo.json` (word timings), point `SEG` in `plan_sizzle.py` at them, re-run. Every cue re-syncs.
